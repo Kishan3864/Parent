@@ -74,12 +74,15 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p className="hint login-card__seed">
-          In a development environment the API seeds one parent account from its{' '}
-          <code>Seed</code> configuration section - <code>Seed:ParentEmail</code> and{' '}
-          <code>Seed:ParentPassword</code> in the backend&apos;s{' '}
-          <code>appsettings.Development.json</code>.
-        </p>
+        {/* Developer convenience only. A deployed login page should not advertise where the
+            bootstrap credentials are configured, so this never reaches a production bundle. */}
+        {import.meta.env.DEV && (
+          <p className="hint login-card__seed">
+            The API seeds one parent account from its <code>Seed</code> configuration -{' '}
+            <code>Seed:ParentEmail</code> and <code>Seed:ParentPassword</code> in{' '}
+            <code>appsettings.Development.json</code>.
+          </p>
+        )}
       </div>
     </div>
   );
