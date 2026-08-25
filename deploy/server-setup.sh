@@ -25,7 +25,10 @@ APP_ROOT="/home/${APP_USER}/${DOMAIN}"
 DB_NAME="parentaltrack"
 DB_USER="parentaltrack"
 DB_HOST="127.0.0.1"
-DB_PORT="5432"
+# Detected below. This host runs several PostgreSQL instances on different ports, so the port must
+# be read from the cluster that `sudo -u postgres psql` actually manages - that is where the role
+# and database get created, and it is not necessarily 5432.
+DB_PORT=""
 ENV_DIR="/etc/parentaltrack"
 ENV_FILE="${ENV_DIR}/parentaltrack-api.env"
 SERVICE="parentaltrack-api"
@@ -48,6 +51,13 @@ note(){ printf '    %s\n' "$*"; }
 
 # ---------------------------------------------------------------------------------------------
 say "1/5  PostgreSQL role and database"
+
+DB_PORT="$(sudo -u postgres psql -tAc 'SHOW port' 2>/dev/null | tr -d '[:space:]')"
+if [[ -z "${DB_PORT}" ]]; then
+  echo "Could not reach PostgreSQL as the 'postgres' user. Is the service running?" >&2
+  exit 1
+fi
+note "cluster reachable on port ${DB_PORT}"
 
 role_exists=$(sudo -u postgres psql -tAc "SELECT 1 FROM pg_roles WHERE rolname='${DB_USER}'" || true)
 db_exists=$(sudo -u postgres psql -tAc "SELECT 1 FROM pg_database WHERE datname='${DB_NAME}'" || true)
@@ -183,7 +193,7 @@ cat <<SUMMARY
 $(printf '\033[1;32m')Server setup complete.$(printf '\033[0m')
 
   Database   ${DB_NAME} on ${DB_HOST}:${DB_PORT}, owner ${DB_USER}
-  Secrets    ${ENV_FILE}  (root, 0600)
+  Secrets    ${ENV_FILE}  (root:'${APP_USER}', 0640)
   Service    ${SERVICE}.service  ->  127.0.0.1:${APP_PORT}
   App dir    ${APP_ROOT}/current
   Vhost      ${DOMAIN}  (HTTP only so far)

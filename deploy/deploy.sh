@@ -75,22 +75,22 @@ ok "$(wc -l < "${SQL_FILE}") lines written to backend/artifacts/migrations.sql"
 
 # ---------------------------------------------------------------------------------------------
 say "5/6  Uploading"
-"${SSH[@]}" "mkdir -p '${REMOTE_ROOT}/current' '${REMOTE_ROOT}/tmp'"
+# rsync is not shipped with git-bash on Windows, so stream a tarball over ssh instead. The upload
+# lands in staging/ and is swapped into place only after the transfer succeeds, so a dropped
+# connection can never leave a half-written application directory behind.
+"${SSH[@]}" "rm -rf '${REMOTE_ROOT}/staging' && mkdir -p '${REMOTE_ROOT}/staging' '${REMOTE_ROOT}/tmp'"
 
-# --delete keeps the remote directory an exact mirror, so files removed from a build do not linger.
-rsync -az --delete \
-  -e "ssh -i ${SSH_KEY} -o StrictHostKeyChecking=accept-new" \
-  "${PUBLISH_DIR}/" "${SSH_USER}@${SSH_HOST}:${REMOTE_ROOT}/current/"
+tar -C "${PUBLISH_DIR}" -czf - . \
+  | "${SSH[@]}" "tar -C '${REMOTE_ROOT}/staging' -xzf -"
 
-rsync -az \
-  -e "ssh -i ${SSH_KEY} -o StrictHostKeyChecking=accept-new" \
+scp -q -i "${SSH_KEY}" -o StrictHostKeyChecking=accept-new \
   "${SQL_FILE}" "${SSH_USER}@${SSH_HOST}:${REMOTE_ROOT}/tmp/migrations.sql"
 
-"${SSH[@]}" "chmod +x '${REMOTE_ROOT}/current/ParentalTrack.Api'"
-ok "uploaded to ${REMOTE_ROOT}/current"
+"${SSH[@]}" "chmod +x '${REMOTE_ROOT}/staging/ParentalTrack.Api'"
+ok "uploaded to ${REMOTE_ROOT}/staging"
 
 # ---------------------------------------------------------------------------------------------
-say "6/6  Migrating and restarting"
+say "6/6  Migrating, swapping and restarting"
 "${SSH[@]}" bash -s <<REMOTE
 set -euo pipefail
 
@@ -100,7 +100,14 @@ set -a; . '${ENV_FILE}'; set +a
 psql -v ON_ERROR_STOP=1 -q -f '${REMOTE_ROOT}/tmp/migrations.sql'
 echo "    migrations applied"
 
-sudo systemctl restart '${SERVICE}'
+# Stop before swapping: the running process holds its own binary open.
+sudo systemctl stop '${SERVICE}' || true
+rm -rf '${REMOTE_ROOT}/previous'
+[ -d '${REMOTE_ROOT}/current' ] && mv '${REMOTE_ROOT}/current' '${REMOTE_ROOT}/previous' || true
+mv '${REMOTE_ROOT}/staging' '${REMOTE_ROOT}/current'
+echo "    swapped into current/ (previous build kept in previous/)"
+
+sudo systemctl start '${SERVICE}'
 REMOTE
 
 # Give the process a moment to bind before probing.
