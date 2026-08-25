@@ -1,0 +1,80 @@
+name: Android APK
+
+# Builds the installable child app. The repository has no Gradle wrapper checked in, so the job
+# generates one with a Gradle version compatible with the AGP in gradle/libs.versions.toml.
+#
+# Output: an "parentaltrack-child-live" artifact containing app-live.apk — the build that talks to
+# https://parent.flexypdf.com, signed with the debug key so it sideloads without a keystore.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'android/**'
+      - '.github/workflows/android.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  # AGP 8.9.x requires Gradle 8.11.1 or newer.
+  GRADLE_VERSION: '8.13'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: android
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: ${{ env.GRADLE_VERSION }}
+
+      - name: Generate the Gradle wrapper
+        run: gradle wrapper --gradle-version "${GRADLE_VERSION}" --no-daemon
+
+      - name: Build the live APK
+        run: ./gradlew assembleLive --no-daemon --stacktrace
+
+      - name: Report APK details
+        run: |
+          apk=app/build/outputs/apk/live/app-live.apk
+          ls -lh "$apk"
+          "$ANDROID_HOME"/build-tools/*/aapt2 dump badging "$apk" \
+            | grep -E "^package|uses-permission|application-label" || true
+
+      - name: Upload the APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: parentaltrack-child-live
+          path: android/app/build/outputs/apk/live/app-live.apk
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Upload the Gradle wrapper
+        # The wrapper is generated here rather than committed; publishing it lets the same version
+        # be dropped into a local checkout for Android Studio.
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: gradle-wrapper
+          path: |
+            android/gradlew
+            android/gradlew.bat
+            android/gradle/wrapper/
+          if-no-files-found: warn

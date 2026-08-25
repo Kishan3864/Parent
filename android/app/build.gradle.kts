@@ -30,6 +30,19 @@ android {
             buildConfigField("boolean", "ALLOW_CLEARTEXT", "true")
             manifestPlaceholders["usesCleartextTraffic"] = "true"
         }
+        // The build to sideload onto a child's phone for this MVP. It points at the live server
+        // like release does, but is signed with the debug key so it installs without any keystore
+        // ceremony - and unlike debug it is neither debuggable nor allowed to use cleartext.
+        // Replace it with a properly signed release build before distributing the app.
+        create("live") {
+            initWith(getByName("debug"))
+            isDebuggable = false
+            isMinifyEnabled = false
+            buildConfigField("String", "API_BASE_URL", "\"https://parent.flexypdf.com/\"")
+            buildConfigField("boolean", "ALLOW_CLEARTEXT", "false")
+            manifestPlaceholders["usesCleartextTraffic"] = "false"
+            matchingFallbacks += listOf("debug")
+        }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
