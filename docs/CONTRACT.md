@@ -291,7 +291,12 @@ Rules:
   `recordedAt` not older than 24 h and not more than 5 min in the future (clock skew).
   Invalid points are counted in `rejected` and skipped — **never fail the whole batch**
   (the device would retry forever).
-* Duplicates (same `device_id` + `client_id`) are silently counted in `duplicates`.
+* Duplicates (same `device_id` + `client_id`) are dropped by the unique index at write time.
+  **`duplicates` is therefore always 0 in the response**, and `accepted` means "passed validation and
+  was queued", not "was inserted". The endpoint answers before the writer has touched the database,
+  so it cannot know the insert outcome; the unique index is the real guarantee and the writer logs
+  the dedupe count. Clients must not treat `accepted` as an insert count — the Android worker only
+  needs to know the batch was taken (202), which is exactly what it acts on.
 * Returns **202** as soon as the batch is queued to the in-process channel; a `BackgroundService`
   performs the DB write. Channel is bounded (`Ingestion:QueueCapacity`, default 10 000) with
   `BoundedChannelFullMode.Wait`; if it cannot be enqueued within 2 s → **503** so the device retries.
