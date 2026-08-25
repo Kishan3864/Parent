@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <RootNamespace>ParentalTrack.Api</RootNamespace>
+    <AssemblyName>ParentalTrack.Api</AssemblyName>
+    <UserSecretsId>parentaltrack-api-5f1c1f1e-1a5b-4f0d-9a2c-6f5a8c3d21b4</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ParentalTrack.Infrastructure\ParentalTrack.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.11" />
+    <!-- JsonWebTokenHandler, used by Security/TokenService.cs. Pinned to the exact version
+         Microsoft.AspNetCore.Authentication.JwtBearer 10.0.11 resolves so the IdentityModel
+         graph stays on a single version. -->
+    <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.19.2" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.11" />
+    <!-- Development-only API reference UI; mapped behind an IsDevelopment() check. -->
+    <PackageReference Include="Scalar.AspNetCore" Version="2.17.1" />
+    <!-- Design-time only: `dotnet ef migrations add` / `dotnet ef database update` are run with
+         this project as the startup project. Never shipped to the runtime output. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.11">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+</Project>

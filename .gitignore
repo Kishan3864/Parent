@@ -1,0 +1,116 @@
+# ---------------------------------------------------------------------------
+# ParentalTrack — repository ignore rules
+# Covers .NET (backend/), Node (admin-web/), Android (android/), IDEs, secrets.
+# ---------------------------------------------------------------------------
+
+# --- .NET -------------------------------------------------------------------
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
+project.lock.json
+project.fragment.lock.json
+artifacts/
+.dotnet/
+msbuild.log
+msbuild.err
+msbuild.wrn
+*.binlog
+TestResults/
+[Cc]overage*/
+*.coverage
+*.coveragexml
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+!packages/build/
+# EF Core scaffolding scratch output (real migrations under
+# backend/src/ParentalTrack.Infrastructure/Migrations ARE committed)
+*.efbundle
+efbundle.exe
+
+# --- Node / Vite (admin-web) -------------------------------------------------
+node_modules/
+dist/
+dist-ssr/
+build/
+.vite/
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+.eslintcache
+coverage/
+.npm/
+
+# --- Android / Gradle --------------------------------------------------------
+.gradle/
+android/build/
+android/app/build/
+android/captures/
+android/.cxx/
+local.properties
+*.iml
+*.hprof
+*.jks
+*.keystore
+!debug.keystore
+release/
+output.json
+*.apk
+*.aab
+*.ap_
+*.dex
+lint-results*.html
+lint-results*.xml
+
+# --- Secrets / environment ---------------------------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.pfx
+*.p12
+appsettings.Local.json
+appsettings.*.Local.json
+secrets.json
+
+# --- IDE / editor ------------------------------------------------------------
+.vs/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json
+!.vscode/settings.json.example
+.idea/
+!.idea/runConfigurations/
+*.swp
+*.swo
+*~
+.history/
+
+# --- OS ----------------------------------------------------------------------
+.DS_Store
+Thumbs.db
+ehthumbs.db
+desktop.ini
+$RECYCLE.BIN/
+
+# --- Local scratch -----------------------------------------------------------
+tmp/
+temp/
+*.local
+
+# The production Vite env is not a secret - it only pins the same-origin API prefix.
+!.env.production

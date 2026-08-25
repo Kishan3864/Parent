@@ -1,0 +1,52 @@
+name: parentaltrack
+
+# Fast path for local development — start PostgreSQL only:
+#   docker compose up -d db
+# The API then runs on the host (dotnet run) against localhost:5432.
+#
+# To run the API in a container as well (rebuilds the image):
+#   JWT_SIGNING_KEY=<64 random chars> docker compose --profile full up -d --build
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: parentaltrack-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: parentaltrack
+      POSTGRES_USER: parentaltrack
+      POSTGRES_PASSWORD: parentaltrack
+    ports:
+      - "5432:5432"
+    volumes:
+      - parentaltrack-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U parentaltrack -d parentaltrack"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
+  api:
+    # Only started with `--profile full`, so plain `docker compose up -d db` stays fast.
+    profiles: ["full"]
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: parentaltrack-api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_HTTP_PORTS: "8080"
+      ConnectionStrings__Postgres: "Host=db;Port=5432;Database=parentaltrack;Username=parentaltrack;Password=parentaltrack"
+      # Required: the API refuses to start with a signing key shorter than 32 bytes.
+      Jwt__SigningKey: "${JWT_SIGNING_KEY:-}"
+      Cors__AllowedOrigins__0: "http://localhost:5173"
+    ports:
+      - "5080:8080"
+
+volumes:
+  parentaltrack-pgdata:

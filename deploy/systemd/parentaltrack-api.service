@@ -1,0 +1,36 @@
+[Unit]
+Description=ParentalTrack API and admin panel (parent.flexypdf.com)
+Documentation=https://github.com/Kishan3864/Parent
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=flexyuser
+Group=flexyuser
+WorkingDirectory=/home/flexyuser/parent.flexypdf.com/current
+
+# Self-contained publish: the binary carries its own .NET runtime, so this box does not need a
+# .NET 10 install (it only ships 9.0.4) and deploys cannot be broken by a host runtime upgrade.
+ExecStart=/home/flexyuser/parent.flexypdf.com/current/ParentalTrack.Api
+
+# Connection string, JWT signing key and bootstrap credentials live here, root-owned and chmod 600.
+EnvironmentFile=/etc/parentaltrack/parentaltrack-api.env
+
+Restart=always
+RestartSec=5
+KillSignal=SIGINT
+TimeoutStopSec=30
+SyslogIdentifier=parentaltrack-api
+
+# Hardening. ProtectHome must stay false: the application lives under /home/flexyuser.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=false
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+
+[Install]
+WantedBy=multi-user.target

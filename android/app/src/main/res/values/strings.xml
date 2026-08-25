@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Naming scheme for this file. Every user-facing string belongs to exactly one prefix, and the
+  prefix names the screen or surface the string appears on:
+
+    app_name          the launcher label (single string, no prefix group)
+    consent_*         first-launch consent screen, incl. the plain-language explanation
+    pairing_*         pairing-code screen and its outcomes
+    permission_*      permission rationales, actions and grant states (notifications, location,
+                      background location, battery-optimisation exemption)
+    notification_*    the ongoing foreground-service notification, its channels, its Stop action,
+                      and the one-off "sharing was turned off" alert
+    status_*          the main status screen: switch, permission summary, timestamps, queue,
+                      errors
+    unpair_*          the "unpair and delete token" flow and its confirmation dialog
+
+  Suffix conventions inside a group: _title, _body, _hint, _label, _helper, _action,
+  _rationale, _error_*, _warning_*.
+  Format arguments are always positional (%1$s, %1$d) so translations can reorder them.
+-->
+<resources>
+
+    <string name="app_name">ParentalTrack</string>
+
+    <!-- ===== Consent ===== -->
+    <string name="consent_title">Before this device starts sharing</string>
+    <string name="consent_body">This app shares this device\'s location with the parent account it is paired to. Please read this and only continue if you agree.</string>
+    <string name="consent_point_location">Your location is sent to your parent\'s account, roughly once a minute while you are moving.</string>
+    <string name="consent_point_background">It keeps sharing in the background, even when the app is closed and after the phone restarts.</string>
+    <string name="consent_point_notification">While sharing is on, a permanent notification is shown, so it is never a secret.</string>
+    <string name="consent_point_stop">You can stop sharing at any time, from this app or straight from that notification.</string>
+    <string name="consent_point_data">Nothing else is collected: no messages, no contacts, no call history, no photos, no microphone, no list of the apps you use.</string>
+    <string name="consent_footer">Your parent can also turn sharing off from their side. If they do, this app tells you.</string>
+    <string name="consent_accept">I understand and agree</string>
+    <string name="consent_decline">Not now</string>
+    <string name="consent_declined_message">Nothing is shared until you agree. You can open this app again whenever you are ready.</string>
+
+    <!-- ===== Pairing ===== -->
+    <string name="pairing_title">Enter the pairing code</string>
+    <string name="pairing_body">Your parent created a code in their dashboard. Type it here to link this device to their account.</string>
+    <string name="pairing_code_label">Pairing code</string>
+    <string name="pairing_code_hint">ABCD-EFGH</string>
+    <string name="pairing_code_helper">8 letters and numbers. The dash is optional and it is not case sensitive.</string>
+    <string name="pairing_submit">Pair this device</string>
+    <string name="pairing_in_progress">Pairing this device&#8230;</string>
+    <string name="pairing_success">Paired with %1$s</string>
+    <string name="pairing_paired_as">This device is paired as %1$s</string>
+    <string name="pairing_error_incomplete">A pairing code is 8 characters long.</string>
+    <string name="pairing_error_invalid">That code is not valid, has expired, or has already been used. Ask your parent for a new one.</string>
+    <string name="pairing_error_network">Could not reach the server. Check your connection and try again.</string>
+    <string name="pairing_error_server">The server could not complete pairing right now. Please try again in a moment.</string>
+    <string name="pairing_error_unknown">Pairing failed. Please try again.</string>
+    <string name="pairing_retry">Try again</string>
+
+    <!-- ===== Permissions ===== -->
+    <string name="permission_title">Permissions</string>
+    <string name="permission_intro">Android asks for each of these separately. We explain what every one is for before asking.</string>
+    <string name="permission_grant">Allow</string>
+    <string name="permission_skip">Skip for now</string>
+    <string name="permission_continue">Continue</string>
+    <string name="permission_open_settings">Open settings</string>
+    <string name="permission_granted">Allowed</string>
+    <string name="permission_denied">Not allowed</string>
+    <string name="permission_not_requested">Not asked yet</string>
+    <string name="permission_denied_permanently">Android will not ask again. You can still change this in system settings.</string>
+
+    <string name="permission_notifications_title">Show the sharing notification</string>
+    <string name="permission_notifications_rationale">Android needs your permission to show notifications. Without it the ongoing sharing notification is hidden, and location would be shared with nothing on screen telling you so.</string>
+    <string name="permission_notifications_action">Allow notifications</string>
+
+    <string name="permission_location_title">Use this device\'s location</string>
+    <string name="permission_location_rationale">This is the location that is shared with your parent. Please choose the precise option: an approximate location can be several hundred metres out, which is not much use for finding you.</string>
+    <string name="permission_location_action">Allow location</string>
+
+    <string name="permission_background_title">Keep sharing in the background</string>
+    <string name="permission_background_rationale">Without this, location is only shared while this app is open on screen. Sharing is meant to keep working when the phone is in a pocket or a bag.</string>
+    <string name="permission_background_action">Allow all the time</string>
+    <string name="permission_background_settings_hint">Android does not ask for this inside the app. Open settings, tap Permissions, then Location, and choose \"%1$s\".</string>
+    <string name="permission_background_settings_hint_generic">Android does not ask for this inside the app. Open settings, tap Permissions, then Location, and choose the option that allows access all the time.</string>
+
+    <string name="permission_battery_title">Ignore battery optimisation</string>
+    <string name="permission_battery_rationale">Optional. Android may put this app to sleep to save battery, which leaves gaps in the shared location. Turning optimisation off for this app makes those gaps much less likely.</string>
+    <string name="permission_battery_action">Turn off optimisation</string>
+    <string name="permission_battery_optional">This one is optional. Sharing still works without it, with occasional gaps.</string>
+
+    <string name="permission_warning_notifications_missing">Notifications are switched off, so you will not see the ongoing sharing notification.</string>
+    <string name="permission_warning_location_missing">Location permission is missing. Nothing can be shared until it is allowed.</string>
+    <string name="permission_warning_coarse_only">Only approximate location is allowed, so shared positions may be several hundred metres out.</string>
+    <string name="permission_warning_background_missing">Background location is not allowed, so sharing pauses whenever this app leaves the screen.</string>
+
+    <!-- ===== Notifications ===== -->
+    <string name="notification_channel_name">Location sharing</string>
+    <string name="notification_channel_description">The ongoing notification shown the whole time this device is sharing its location.</string>
+    <string name="notification_title">Location sharing is on</string>
+    <string name="notification_text">Location sharing is on &#8212; your parent can see this device\'s location</string>
+    <string name="notification_stop_action">Stop sharing</string>
+    <string name="notification_alert_channel_name">Sharing status</string>
+    <string name="notification_alert_channel_description">One-off messages about sharing being turned on or off.</string>
+    <string name="notification_revoked_title">Location sharing was turned off by your parent</string>
+    <string name="notification_revoked_text">This device is no longer linked to their account and has stopped sending its location.</string>
+
+    <!-- Aliases, not copies: the foreground-service code refers to the notification strings by a
+         tracking_* name. They resolve to the notification_* strings above, so the wording still
+         lives in exactly one place. Prefer the notification_* ids in new code. -->
+    <string name="tracking_channel_name">@string/notification_channel_name</string>
+    <string name="tracking_channel_description">@string/notification_channel_description</string>
+    <string name="tracking_notification_title">@string/notification_title</string>
+    <string name="tracking_notification_text">@string/notification_text</string>
+    <string name="tracking_notification_stop">@string/notification_stop_action</string>
+
+    <!-- ===== Status screen ===== -->
+    <string name="status_title">Location sharing</string>
+    <string name="status_sharing_switch">Share this device\'s location</string>
+    <string name="status_sharing_on">Sharing is on</string>
+    <string name="status_sharing_off">Sharing is off</string>
+    <string name="status_sharing_starting">Starting&#8230;</string>
+    <string name="status_paired_with">Paired with %1$s</string>
+    <string name="status_not_paired">This device is not paired yet</string>
+    <string name="status_permissions_header">Permissions</string>
+    <string name="status_permission_notifications">Notifications</string>
+    <string name="status_permission_location">Location</string>
+    <string name="status_permission_background">Background location</string>
+    <string name="status_permission_battery">Battery optimisation exemption</string>
+    <string name="status_last_fix">Last location taken</string>
+    <string name="status_last_upload">Last successful upload</string>
+    <string name="status_pending_queue">Waiting to upload</string>
+    <string name="status_pending_count">%1$d location(s)</string>
+    <string name="status_never">Never</string>
+    <string name="status_refresh">Refresh</string>
+    <string name="status_fix_permissions">Fix permissions</string>
+    <string name="status_revoked_title">Sharing was turned off by your parent</string>
+    <string name="status_revoked_body">This device is no longer linked to a parent account. Nothing is being sent. Ask your parent for a new pairing code if it should be linked again.</string>
+    <string name="status_error_service_start">Android would not let sharing start while the app was in the background. Open the app and turn sharing on again.</string>
+    <string name="status_error_location_permission">Sharing cannot start without location permission.</string>
+    <string name="status_error_not_paired">Sharing cannot start until this device is paired.</string>
+    <string name="status_error_upload">The last upload failed. Locations are queued and will be sent when the connection is back.</string>
+
+    <!-- ===== Unpair ===== -->
+    <string name="unpair_button">Unpair &amp; delete token</string>
+    <string name="unpair_confirm_title">Unpair this device?</string>
+    <string name="unpair_confirm_message">Sharing stops immediately, the stored pairing token is deleted from this device, and any locations still waiting to be sent are discarded. A new pairing code from your parent is needed to link it again.</string>
+    <string name="unpair_confirm_action">Unpair</string>
+    <string name="unpair_cancel">Cancel</string>
+    <string name="unpair_done">This device has been unpaired and is no longer sharing its location.</string>
+
+</resources>

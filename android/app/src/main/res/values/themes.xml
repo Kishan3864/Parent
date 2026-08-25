@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Window theme for MainActivity. The UI itself is Compose Material 3; this only sets the
+         window background and system-bar handling, and follows the system light/dark setting. -->
+    <style name="Theme.ParentalTrack" parent="Theme.Material3.DayNight.NoActionBar" />
+
+</resources>

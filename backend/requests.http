@@ -1,0 +1,252 @@
+### ParentalTrack — end-to-end MVP walkthrough
+#
+# Run the requests top to bottom. Written for the VS Code "REST Client" extension, which chains
+# values between requests via {{requestName.response.body.$.field}}. In editors without response
+# chaining (Visual Studio, Rider), run a request and paste the value into the matching @variable
+# below — every chained value has a plain @variable you can overwrite.
+#
+# Prerequisites:
+#   docker compose up -d db
+#   dotnet run --project src/ParentalTrack.Api          (profile "http" -> http://localhost:5080)
+
+@host = http://localhost:5080
+@api = {{host}}/api/v1
+@contentType = application/json
+
+@parentEmail = parent@example.com
+@parentPassword = ChangeMe123!
+@childName = Sam
+@deviceLabel = Sam's phone
+
+###############################################################################
+# 0. Health — no auth. /health/ready is 503 while PostgreSQL is unreachable.
+###############################################################################
+
+GET {{host}}/health/live
+
+###
+GET {{host}}/health/ready
+
+###############################################################################
+# 1. Register a parent (Development only: Auth:AllowSelfRegistration must be true).
+#    Already seeded? Skip to step 2 — this returns 409 for an existing email.
+###############################################################################
+
+# @name register
+POST {{api}}/auth/register
+Content-Type: {{contentType}}
+
+{
+  "email": "{{parentEmail}}",
+  "password": "{{parentPassword}}",
+  "displayName": "Demo Parent"
+}
+
+###############################################################################
+# 2. Log in. Rate limited to 10 requests per minute per IP.
+###############################################################################
+
+# @name login
+POST {{api}}/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "{{parentEmail}}",
+  "password": "{{parentPassword}}"
+}
+
+@accessToken = {{login.response.body.$.accessToken}}
+@refreshToken = {{login.response.body.$.refreshToken}}
+
+###
+GET {{api}}/auth/me
+Authorization: Bearer {{accessToken}}
+
+###
+# Thresholds and map settings the admin web app reads on boot.
+GET {{api}}/config
+Authorization: Bearer {{accessToken}}
+
+###############################################################################
+# 3. Create a child device. The plaintext pairing code is returned exactly once,
+#    here (and again only from the regenerate call in step 3b).
+###############################################################################
+
+# @name createDevice
+POST {{api}}/devices
+Authorization: Bearer {{accessToken}}
+Content-Type: {{contentType}}
+
+{
+  "childName": "{{childName}}",
+  "deviceLabel": "{{deviceLabel}}"
+}
+
+@deviceId = {{createDevice.response.body.$.id}}
+@pairingCode = {{createDevice.response.body.$.pairingCode}}
+
+###
+GET {{api}}/devices
+Authorization: Bearer {{accessToken}}
+
+###
+GET {{api}}/devices/{{deviceId}}
+Authorization: Bearer {{accessToken}}
+
+###
+# 3b. Lost the code, or it expired (Devices:PairingCodeTtlMinutes, default 60)? Issue a new one.
+# @name regenerateCode
+POST {{api}}/devices/{{deviceId}}/pairing-code
+Authorization: Bearer {{accessToken}}
+
+###
+PATCH {{api}}/devices/{{deviceId}}
+Authorization: Bearer {{accessToken}}
+Content-Type: {{contentType}}
+
+{
+  "deviceLabel": "Sam's Pixel 7",
+  "isActive": true
+}
+
+###############################################################################
+# 4. Enroll — this is what the Android app does. No auth, 5 requests per minute
+#    per IP. The code is accepted with or without the dash, any casing.
+###############################################################################
+
+# @name enroll
+POST {{api}}/devices/enroll
+Content-Type: {{contentType}}
+
+{
+  "pairingCode": "{{pairingCode}}",
+  "installId": "11111111-2222-3333-4444-555555555555",
+  "manufacturer": "Google",
+  "model": "Pixel 7",
+  "osVersion": "14",
+  "appVersion": "1.0.0"
+}
+
+@deviceToken = {{enroll.response.body.$.deviceToken}}
+
+###
+GET {{api}}/devices/me
+Authorization: Bearer {{deviceToken}}
+
+###############################################################################
+# 5. Ingest a batch of fixes (device token). Answers 202 once the batch is queued;
+#    a background writer persists it. Re-running this exact request counts the
+#    points as duplicates because clientId is the idempotency key.
+###############################################################################
+
+# @name ingest
+POST {{api}}/ingest/locations
+Authorization: Bearer {{deviceToken}}
+Content-Type: {{contentType}}
+
+{
+  "points": [
+    {
+      "clientId": "{{$guid}}",
+      "latitude": 12.9716,
+      "longitude": 77.5946,
+      "accuracyMeters": 8.5,
+      "altitudeMeters": 910.2,
+      "speedMetersPerSecond": 1.4,
+      "bearingDegrees": 173.0,
+      "batteryPercent": 78,
+      "isCharging": false,
+      "provider": "gps",
+      "recordedAt": "{{$datetime iso8601}}"
+    },
+    {
+      "clientId": "{{$guid}}",
+      "latitude": 12.9721,
+      "longitude": 77.5951,
+      "accuracyMeters": 12.0,
+      "speedMetersPerSecond": 2.1,
+      "bearingDegrees": 168.0,
+      "batteryPercent": 77,
+      "isCharging": false,
+      "provider": "fused",
+      "recordedAt": "{{$datetime iso8601}}"
+    }
+  ]
+}
+
+###
+# Invalid points are counted in "rejected" and skipped — the batch still returns 202.
+POST {{api}}/ingest/locations
+Authorization: Bearer {{deviceToken}}
+Content-Type: {{contentType}}
+
+{
+  "points": [
+    {
+      "clientId": "{{$guid}}",
+      "latitude": 999.0,
+      "longitude": 77.5946,
+      "accuracyMeters": 8.5,
+      "provider": "gps",
+      "recordedAt": "{{$datetime iso8601}}"
+    }
+  ]
+}
+
+###############################################################################
+# 6. Read back as the parent. Current is 204 until the first point is written.
+###############################################################################
+
+GET {{api}}/devices/{{deviceId}}/location/current
+Authorization: Bearer {{accessToken}}
+
+###
+# Defaults: from = now-24h, to = now, limit 1000, order asc.
+GET {{api}}/devices/{{deviceId}}/locations
+Authorization: Bearer {{accessToken}}
+
+###
+# Same window the dashboard uses for a drawn track.
+GET {{api}}/devices/{{deviceId}}/locations?from=2026-08-24T00:00:00.000Z&to=2026-08-26T00:00:00.000Z&limit=2000&order=asc&simplify=true
+Authorization: Bearer {{accessToken}}
+
+###
+# Drop noisy fixes and read newest first.
+GET {{api}}/devices/{{deviceId}}/locations?limit=50&order=desc&minAccuracyMeters=50
+Authorization: Bearer {{accessToken}}
+
+###############################################################################
+# 7. Session lifecycle.
+###############################################################################
+
+# Rotates the refresh token; the old one is revoked and reusing it revokes them all.
+# @name refresh
+POST {{api}}/auth/refresh
+Content-Type: {{contentType}}
+
+{
+  "refreshToken": "{{refreshToken}}"
+}
+
+###
+# Revokes every session of the device — the app gets 401 on its next ingest.
+POST {{api}}/devices/{{deviceId}}/revoke
+Authorization: Bearer {{accessToken}}
+
+###
+# Confirms the revoke: 401.
+GET {{api}}/devices/me
+Authorization: Bearer {{deviceToken}}
+
+###
+# Hard delete, cascades to sessions and location history.
+DELETE {{api}}/devices/{{deviceId}}
+Authorization: Bearer {{accessToken}}
+
+###
+POST {{api}}/auth/logout
+Content-Type: {{contentType}}
+
+{
+  "refreshToken": "{{refresh.response.body.$.refreshToken}}"
+}

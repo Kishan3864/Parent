@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Entities, enums and pure calculations. Deliberately dependency-free so every module and any
+       future extracted service can reference it without dragging in EF Core or ASP.NET Core. -->
+  <PropertyGroup>
+    <RootNamespace>ParentalTrack.Domain</RootNamespace>
+    <AssemblyName>ParentalTrack.Domain</AssemblyName>
+  </PropertyGroup>
+
+</Project>

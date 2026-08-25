@@ -1,0 +1,26 @@
+# Build artefacts — always rebuilt inside the image.
+**/bin/
+**/obj/
+**/out/
+
+# Local tooling and IDE state.
+**/.vs/
+**/.vscode/
+**/.idea/
+**/*.user
+**/*.suo
+
+# Local secrets and environment overrides must never land in an image layer.
+**/appsettings.Local.json
+**/*.pfx
+.env
+.env.*
+
+# Not needed by the build.
+**/.git/
+**/.gitignore
+**/.dockerignore
+Dockerfile
+docker-compose.yml
+README.md
+requests.http
