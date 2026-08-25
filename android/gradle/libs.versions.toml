@@ -25,7 +25,6 @@ securityCrypto = "1.1.0"
 playServicesLocation = "21.3.0"
 
 retrofit = "2.11.0"
-retrofitKotlinxSerialization = "1.0.0"
 okhttp = "4.12.0"
 kotlinxSerializationJson = "1.8.1"
 kotlinxCoroutines = "1.10.2"
@@ -58,7 +57,10 @@ androidx-security-crypto = { module = "androidx.security:security-crypto", versi
 play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "playServicesLocation" }
 
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
-retrofit-kotlinx-serialization-converter = { module = "com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter", version.ref = "retrofitKotlinxSerialization" }
+# Square's own converter, shipped with Retrofit since 2.11 and versioned with it. Its package is
+# retrofit2.converter.kotlinx.serialization, which is what ApiClient imports; JakeWharton's older
+# library of the same purpose uses com.jakewharton.retrofit2.* and is superseded by this one.
+retrofit-kotlinx-serialization-converter = { module = "com.squareup.retrofit2:converter-kotlinx-serialization", version.ref = "retrofit" }
 okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
 okhttp-logging-interceptor = { module = "com.squareup.okhttp3:logging-interceptor", version.ref = "okhttp" }
 
